@@ -4,6 +4,26 @@
 #define NIL -1
 using namespace std;
 
+static void parseArgs (long argc, char* const argv[]) {
+    int nFriends;
+    int nRelationships;
+    int *grades;
+    if (argc != 3) {
+        fprintf(stderr, "Invalid format:\n");
+        displayUsage(argv[0]);
+    }
+    nFriends = argv[0];
+    nRelationships = argv[2];
+    if (nFriends < 2 || nRelationships < 1) {
+        fprintf(stderr, "Invalid arguments, insert the correct type of arguments\n");
+        exit(EXIT_FAILURE);
+    }
+    grades = new int[nFriends];
+    for (int i = 0; i < nFriends, i++)
+        cin >> grades[i];
+
+}
+
 class Graph {
     int V;              // Number of vertices
     list<int> *adj;     // Dynamic array of adjacency lists
