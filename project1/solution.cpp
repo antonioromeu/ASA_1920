@@ -1,9 +1,7 @@
 #include <iostream>
-#include <typeinfo>
 #include <list>
 #include <vector>
 #include <stack>
-#include <iterator>
 #define NIL -1
 using namespace std;
 
@@ -34,7 +32,6 @@ class Vertix {
     int getLow() { return _low; }
     
     int getStackMember() { return _stackMember; }
-    
 };
 
 class Node {
@@ -59,26 +56,49 @@ class Node {
 };
 
 class Graph {
-    
-    int _nrNodes;
+    int _numberNodes;
     vector<Node*> _nodes;
 
     public:
-    Graph(int nrNodes) { _nrNodes = nrNodes; }
+    Graph(int numberNodes) { _numberNodes = numberNodes; }
 
     void addNode(Node* node) { _nodes.push_back(node); }
  
     vector<Node*> getNodes() { return _nodes; }
-
 };
+
+int main() {
+    int students, relationships, grade, from, to;
+    
+    if (!scanf("%d,%d", &students, &relationships)) { // Scans the first line of input
+        printf("Error on scanf\n");
+        exit(EXIT_FAILURE);
+    }
+ 
+    if (students < 2 || relationships < 1) {
+        printf("Error on input\n");
+        exit(EXIT_FAILURE);
+    }
+
+    Graph *graph = new Graph(students);
+
+    for (int i = 0; i < students; i++) { // Creates vertices and adds them to graph
+        scanf("%d", &grade);
+        Vertix* v = new Vertix(grade);
+        Node* n = new Node(v);
+        graph->addNode(n);
+    }
+
+    for (int i = 0; i < relationships; i++) { // Adds the relationships to the adjacencies list
+        scanf("%d %d", &from, &to);
+        graph->getNodes().at(from-1)->addAdj(graph->getNodes().at(to-1)->getVertix());
+    }
+
+    return 0;
+}
 
 /*
 // A recursive function that finds and prints strongly connected components using DFS traversal 
-// u                --> The vertex to be visited next 
-// disc[]           --> Stores discovery times of visited vertices 
-// low[]            --> Earliest visited vertex (the vertex with minimum discovery time) that can be reached from subtree rooted with current vertex 
-// *st              --> To store all the connected ancestors (could be part of SCC)
-// stackMember[]    --> Bit/index array for faster check whether a node is in stack
 void Graph::SCCUtil(int u, int disc[], int low[], stack<int> *st, bool stackMember[]) {
     // A static variable is used for simplicity, we can avoid use of static variable by passing a pointer.
     static int time = 0;
@@ -145,42 +165,3 @@ void Graph::SCC() {
             SCCUtil(i, disc, low, st, stackMember);
 }
 */
-
-int main(int argc, char* argv[]) {
-    int nFriends;
-    int nRelationships;
-    int grade, from, to;
-    if (!scanf("%d,%d", &nFriends, &nRelationships)) {
-        printf("Error on scanf\n");
-        exit(EXIT_FAILURE);
-    }
-    if (nFriends < 2 || nRelationships < 1) {
-        printf("Error on input\n");
-        exit(EXIT_FAILURE);
-    }
-    Graph *graph = new Graph(nFriends);
-    
-    // Creates vertices and adds them to graph
-    for (int i = 0; i < nFriends; i++) {
-        scanf("%d", &grade);
-        Vertix* v = new Vertix(grade);
-        Node* n = new Node(v);
-        graph->addNode(n);
-        //cout << n << endl;
-    }
-    //cout << "-----" << endl;
-/*
-    for (Node *n: graph->getNodes()){
-        cout << n << endl;
-
-    }*/
-    list<Node*>::iterator it;
-    //Node* node;
-    //Vertix* vertix;
-    //it = graph->getNodes().begin();
-    for (int i = 0; i < nRelationships; i++) {
-        scanf("%d %d", &from, &to);
-        graph->getNodes().at(from - 1)->addAdj(graph->getNodes().at(to-1)->getVertix());
-    }
-    return 0;
-}
