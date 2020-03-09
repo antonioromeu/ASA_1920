@@ -1,49 +1,60 @@
 #include <iostream>
+#include <typeinfo>
 #include <list>
 #include <stack>
+#include <iterator>
 #define NIL -1
 using namespace std;
 
-static void parseArgs (long argc, char* const argv[]) {
-    int nFriends;
-    int nRelationships;
-    int *grades;
-    if (argc != 3) {
-        fprintf(stderr, "Invalid format:\n");
-        displayUsage(argv[0]);
-    }
-    nFriends = argv[0];
-    nRelationships = argv[2];
-    if (nFriends < 2 || nRelationships < 1) {
-        fprintf(stderr, "Invalid arguments, insert the correct type of arguments\n");
-        exit(EXIT_FAILURE);
-    }
-    grades = new int[nFriends];
-    for (int i = 0; i < nFriends, i++)
-        cin >> grades[i];
-
-}
+typedef struct node {
+    int grade, disc, low;
+    bool stackMember;
+    struct node *next;
+    //int nSCC;
+} *Node;
 
 class Graph {
-    int V;              // Number of vertices
-    list<int> *adj;     // Dynamic array of adjacency lists
-    void SCCUtil(int u, int disc[], int low[], stack<int> *st, bool stackMember[]); 
-    
+    int nrNodes;
+    list<Node> adj;
+    //void SCCUtil(int u, int disc[], int low[], stack<int> *st, bool stackMember[]); 
+ 
     public:
     Graph(int V);
-    void addEdge(int v, int w);     // Add an edge to graph 
-    void SCC();                     // Prints strongly connected components 
+    void addGrade(int v, int grade);
+    void addEdge(int v, Node w); 
+    //void SCC();                     // Prints strongly connected components 
 };
 
-Graph::Graph(int V) {
-    this->V = V;
-    adj = new list<int>[V]; 
+Graph::Graph(int nrNodes) {
+    this->nrNodes = nrNodes;
+    adj = new list<Node>[nrNodes];
+    //for (list<Node>::iterator it = adj->begin(); it != adj->end(); ++it) {
+    for (int i = 0; i < nrNodes; i++) {
+        Node node = (Node) malloc (sizeof(struct node));
+        node->grade = NIL;
+        node->disc = NIL;
+        node->low = NIL;
+        node->stackMember = false;
+        node->next = NULL;
+        /*adj[i] = node;
+        adj[i]->grade = NIL;
+        adj[i]->disc = NIL;
+        adj[i]->low = NIL;
+        adj[i]->stackMember = false;
+        //(*it)->nSCC = NIL;
+        */
+    }
 }
 
-void Graph::addEdge(int v, int w) {
+void Graph::addGrade(int v, int grade) {
+    adj[v]->grade = NIL;
+}
+
+void Graph::addEdge(int v, Node w) {
     adj[v].push_back(w);
 }
 
+/*
 // A recursive function that finds and prints strongly connected components using DFS traversal 
 // u                --> The vertex to be visited next 
 // disc[]           --> Stores discovery times of visited vertices 
@@ -115,15 +126,25 @@ void Graph::SCC() {
         if (disc[i] == NIL)
             SCCUtil(i, disc, low, st, stackMember);
 }
+*/
 
-int main() {
-    cout << "\nSCCs in first graph \n";
-    Graph g1(5);
-    g1.addEdge(1, 0);
-    g1.addEdge(0, 2);
-    g1.addEdge(2, 1);
-    g1.addEdge(0, 3);
-    g1.addEdge(3, 4);
-    g1.SCC();
+int main(int argc, char* argv[]) {
+    int nFriends;
+    int nRelationships;
+    int *grades;
+    if (!scanf("%d,%d", &nFriends, &nRelationships)) {
+        printf("Error on scanf\n");
+        exit(EXIT_FAILURE);
+    }
+    if (nFriends < 2 || nRelationships < 1) {
+        printf("Error on input\n");
+        exit(EXIT_FAILURE);
+    }
+    grades = (int*) malloc(sizeof(int) * nFriends);
+    for (int i = 0; i < nFriends; i++) {
+        scanf("%d", &grades[i]);
+    }
+    Graph *graph = new Graph(nFriends);
+    
     return 0;
 }
