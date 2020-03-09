@@ -6,53 +6,73 @@
 #define NIL -1
 using namespace std;
 
-typedef struct node {
-    int grade, disc, low;
-    bool stackMember;
-    struct node *next;
-    //int nSCC;
-} *Node;
+class Vertix {
+    int _grade, _disc, _low;
+    bool _stackMember;
 
-class Graph {
-    int nrNodes;
-    list<Node> adj;
-    //void SCCUtil(int u, int disc[], int low[], stack<int> *st, bool stackMember[]); 
- 
     public:
-    Graph(int V);
-    void addGrade(int v, int grade);
-    void addEdge(int v, Node w); 
-    //void SCC();                     // Prints strongly connected components 
+    Vertix(int grade) {
+        _grade = grade;
+        _disc = NIL;
+        _low = NIL;
+        _stackMember = false;
+    }
+
+    void setGrade(int grade) { _grade = grade; }
+
+    void setDisc(int disc) { _disc = disc; }
+
+    void setLow(int low) { _low = low; }
+
+    void setStackMember(bool b) { _stackMember = b; }
+
+    int getGrade() { return _grade; }
+
+    int getDisc() { return _disc; }
+
+    int getLow() { return _low; }
+    
+    int getStackMember() { return _stackMember; }
 };
 
-Graph::Graph(int nrNodes) {
-    this->nrNodes = nrNodes;
-    adj = new list<Node>[nrNodes];
-    //for (list<Node>::iterator it = adj->begin(); it != adj->end(); ++it) {
-    for (int i = 0; i < nrNodes; i++) {
-        Node node = (Node) malloc (sizeof(struct node));
-        node->grade = NIL;
-        node->disc = NIL;
-        node->low = NIL;
-        node->stackMember = false;
-        node->next = NULL;
-        /*adj[i] = node;
-        adj[i]->grade = NIL;
-        adj[i]->disc = NIL;
-        adj[i]->low = NIL;
-        adj[i]->stackMember = false;
-        //(*it)->nSCC = NIL;
-        */
+class Node {
+    Vertix* _vertix;
+    list<Vertix*> _adj;
+
+    public:
+    Node(Vertix* vertix) { _vertix = vertix; }
+
+    void setVertix(Vertix* vertix) { _vertix = vertix; }
+
+    void addAdj(Vertix* vertix) { _adj.push_back(vertix); }
+
+    Vertix* getVertix() const { return _vertix; }
+
+    list<Vertix*> getAdj() { return _adj; }
+
+    friend ostream &operator<<(ostream &o, const Node &node) {
+        o << "nota " << node.getVertix()->getGrade() << endl;
+        return o;
     }
-}
+};
 
-void Graph::addGrade(int v, int grade) {
-    adj[v]->grade = NIL;
-}
+class Graph {
+    
+    int _nrNodes;
+    list<Node*> _nodes;
+    //void SCCUtil(int u, int disc[], int low[], stack<int> *st, bool stackMember[]);
 
-void Graph::addEdge(int v, Node w) {
-    adj[v].push_back(w);
-}
+    public:
+    Graph(int nrNodes) { _nrNodes = nrNodes; }
+
+    void addNode(Node* node) {
+        _nodes.push_back(node);
+    }
+ 
+    list<Node*> getNodes() { return _nodes; }
+
+    //void SCC();                     // Prints strongly connected components 
+};
 
 /*
 // A recursive function that finds and prints strongly connected components using DFS traversal 
@@ -131,7 +151,7 @@ void Graph::SCC() {
 int main(int argc, char* argv[]) {
     int nFriends;
     int nRelationships;
-    int *grades;
+    int grade, from, to;
     if (!scanf("%d,%d", &nFriends, &nRelationships)) {
         printf("Error on scanf\n");
         exit(EXIT_FAILURE);
@@ -140,11 +160,31 @@ int main(int argc, char* argv[]) {
         printf("Error on input\n");
         exit(EXIT_FAILURE);
     }
-    grades = (int*) malloc(sizeof(int) * nFriends);
-    for (int i = 0; i < nFriends; i++) {
-        scanf("%d", &grades[i]);
-    }
     Graph *graph = new Graph(nFriends);
     
+    // Creates vertices and adds them to graph
+    for (int i = 0; i < nFriends; i++) {
+        scanf("%d", &grade);
+        Vertix* v = new Vertix(grade);
+        Node* n = new Node(v);
+        graph->addNode(n);
+    }
+    list<Node*>::iterator it;
+    Node* node;
+    Vertix* vertix;
+    for (int i = 0; i < nRelationships; i++) {
+        it = graph->getNodes().begin();
+        scanf("%d %d", &from, &to);
+        advance(it, from);
+        node = *it;
+        cout << node->getVertix();
+        //fflush(stdout);
+        /**
+        advance(it, to - from);
+        //
+        vertix = (*it)->getVertix();
+        node->addAdj(vertix);
+        */
+        }
     return 0;
 }
