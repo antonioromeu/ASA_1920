@@ -1,6 +1,7 @@
 #include <iostream>
 #include <typeinfo>
 #include <list>
+#include <vector>
 #include <stack>
 #include <iterator>
 #define NIL -1
@@ -33,6 +34,7 @@ class Vertix {
     int getLow() { return _low; }
     
     int getStackMember() { return _stackMember; }
+    
 };
 
 class Node {
@@ -59,19 +61,15 @@ class Node {
 class Graph {
     
     int _nrNodes;
-    list<Node*> _nodes;
-    //void SCCUtil(int u, int disc[], int low[], stack<int> *st, bool stackMember[]);
+    vector<Node*> _nodes;
 
     public:
     Graph(int nrNodes) { _nrNodes = nrNodes; }
 
-    void addNode(Node* node) {
-        _nodes.push_back(node);
-    }
+    void addNode(Node* node) { _nodes.push_back(node); }
  
-    list<Node*> getNodes() { return _nodes; }
+    vector<Node*> getNodes() { return _nodes; }
 
-    //void SCC();                     // Prints strongly connected components 
 };
 
 /*
@@ -168,23 +166,21 @@ int main(int argc, char* argv[]) {
         Vertix* v = new Vertix(grade);
         Node* n = new Node(v);
         graph->addNode(n);
+        //cout << n << endl;
     }
+    //cout << "-----" << endl;
+/*
+    for (Node *n: graph->getNodes()){
+        cout << n << endl;
+
+    }*/
     list<Node*>::iterator it;
-    Node* node;
-    Vertix* vertix;
+    //Node* node;
+    //Vertix* vertix;
+    //it = graph->getNodes().begin();
     for (int i = 0; i < nRelationships; i++) {
-        it = graph->getNodes().begin();
         scanf("%d %d", &from, &to);
-        advance(it, from);
-        node = *it;
-        cout << node->getVertix();
-        //fflush(stdout);
-        /**
-        advance(it, to - from);
-        //
-        vertix = (*it)->getVertix();
-        node->addAdj(vertix);
-        */
-        }
+        graph->getNodes().at(from - 1)->addAdj(graph->getNodes().at(to-1)->getVertix());
+    }
     return 0;
 }
