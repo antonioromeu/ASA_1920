@@ -6,15 +6,16 @@
 using namespace std;
 
 class Vertix {
-    int _grade, _disc, _low;
+    int _grade, _disc, _low, _vecIndex;
     bool _stackMember;
 
     public:
-    Vertix(int grade) {
+    Vertix(int grade, int index) {
         _grade = grade;
         _disc = NIL;
         _low = NIL;
         _stackMember = false;
+        _vecIndex = index;
     }
 
     void setGrade(int grade) { _grade = grade; }
@@ -31,13 +32,15 @@ class Vertix {
 
     int getLow() const { return _low; }
     
-    int getStackMember() { return _stackMember; }
+    int isStackMember() { return _stackMember; }
+
+    int getIndex() const { return _vecIndex; }
 
     /*=================================================== 
     UNNECESSARY for the project but useful for debugging.
     ====================================================*/
     friend ostream &operator<<(ostream &o, const Vertix &vertix) {
-        o << vertix.getGrade();
+        o << vertix.getIndex()+1 << " low-" << vertix.getLow();
         return o;
     }
     /*===================================================*/
@@ -46,6 +49,7 @@ class Vertix {
 class Node {
     Vertix* _vertix;
     list<Vertix*> _adj;
+
 
     public:
     Node(Vertix* vertix) { _vertix = vertix; }
@@ -93,6 +97,53 @@ class Graph {
         return o;
     }
     /*===================================================*/
+
+    void SCCaux(Vertix* vertix, stack<Vertix*> st[]) {
+        Node* node =_nodes.at(vertix->getIndex());
+        static int time = 0;
+        time++;
+        vertix->setDisc(time);
+        vertix->setLow(time);
+        st->push(vertix);
+        vertix->setStackMember(true);
+        // Go through all vertices adjacent to this
+        for (Vertix* i : node->getAdj()) {
+            Vertix* adjacent = i;
+            if (adjacent->getDisc() == NIL) {
+                SCCaux(adjacent, st); ////////////////////////////////////////////
+                if (vertix->getIndex() == 1) { cout << "2 low: " << vertix->getLow() << " adj: " << adjacent->getIndex()+1 << ' ' << adjacent->getLow() << endl; }
+                vertix->setLow(min(vertix->getLow(), adjacent->getLow()));
+            }
+            else if (adjacent->isStackMember()) {
+                if (vertix->getIndex() == 2) { cout << "3 low: " << vertix->getLow() << " adj: " << adjacent->getIndex()+1 << ' ' << adjacent->getDisc() << endl; }
+                vertix->setLow(min(vertix->getLow(), adjacent->getDisc()));
+            }
+        }
+
+        Vertix* v;
+        if (vertix->getLow() == vertix->getLow()) { 
+            while (st->top()->getIndex() != vertix->getIndex()) { 
+                v = (Vertix*) st->top(); 
+                cout << *v << " "; 
+                v->setStackMember(false);
+                st->pop(); 
+            } 
+            v = (Vertix*) st->top(); 
+            cout << *v << endl; 
+            v->setStackMember(false);
+            st->pop(); 
+        } 
+    }
+
+    void SCC() {
+        stack<Vertix*>* st = new stack<Vertix*>();
+        for (int i = 0; i < _nodes.size(); i++) {
+            Vertix* vertix = _nodes[i]->getVertix();
+            cout << "============" << *vertix << endl;
+            if (vertix->getDisc() == NIL)
+                SCCaux(vertix, st);
+        }
+    }
 };
 
 Graph* graphInit() {
@@ -111,7 +162,7 @@ Graph* graphInit() {
 
     for (int i = 0; i < students; i++) { // Creates vertices and adds them to graph
         scanf("%d", &grade);
-        Vertix* v = new Vertix(grade);
+        Vertix* v = new Vertix(grade, i);
         Node* n = new Node(v);
         graph->addNode(n);
     }
@@ -125,75 +176,6 @@ Graph* graphInit() {
 
 int main() {
     Graph *graph = graphInit();
-    cout << *graph;
+    graph->SCC();
     return 0;
 }
-
-/*
-// A recursive function that finds and prints strongly connected components using DFS traversal 
-void Graph::SCCUtil(int u, int disc[], int low[], stack<int> *st, bool stackMember[]) {
-    // A static variable is used for simplicity, we can avoid use of static variable by passing a pointer.
-    static int time = 0;
-
-    // Initialize discovery time and low value 
-    disc[u] = low[u] = ++time;
-    st->push(u);
-    stackMember[u] = true; 
-
-    // Go through all vertices adjacent to this 
-    list<int>::iterator i; 
-    for (i = adj[u].begin(); i != adj[u].end(); ++i) {
-        int v = *i;  // v is current adjacent of 'u'
-        
-        // If v is not visited yet, then recur for it 
-        if (disc[v] == -1) { 
-            SCCUtil(v, disc, low, st, stackMember); 
-
-            // Check if the subtree rooted with 'v' has a connection to one of the ancestors of 'u' 
-            // Case 1 (per above discussion on Disc and Low value) 
-            low[u] = min(low[u], low[v]); 
-        }
-  
-        // Update low value of 'u' only of 'v' is still in stack (i.e. it's a back edge, not cross edge). 
-        // Case 2 (per above discussion on Disc and Low value)
-        else if (stackMember[v] == true)
-            low[u] = min(low[u], disc[v]);
-    }
-
-    // head node found, pop the stack and print an SCC 
-    int w = 0;  // To store stack extracted vertices 
-    if (low[u] == disc[u]) {
-        while (st->top() != u) {
-            w = (int) st->top();
-            cout << w << " ";
-            stackMember[w] = false;
-            st->pop();
-        }
-        w = (int) st->top();
-        cout << w << "\n";
-        stackMember[w] = false;
-        st->pop();
-    }
-}
-
-// The function to do DFS traversal. It uses SCCUtil()
-void Graph::SCC() {
-    int *disc = new int[V];
-    int *low = new int[V];
-    bool *stackMember = new bool[V];
-    stack<int> *st = new stack<int>();
-
-    // Initialize disc and low, and stackMember arrays
-    for (int i = 0; i < V; i++) {
-        disc[i] = NIL;
-        low[i] = NIL;
-        stackMember[i] = false;
-    }
-
-    // Call the recursive helper function to find strongly
-    // connected components in DFS tree with vertex 'i'
-    for (int i = 0; i < V; i++)
-        if (disc[i] == NIL)
-            SCCUtil(i, disc, low, st, stackMember);
-}
-*/
