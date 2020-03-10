@@ -25,13 +25,22 @@ class Vertix {
 
     void setStackMember(bool b) { _stackMember = b; }
 
-    int getGrade() { return _grade; }
+    int getGrade() const { return _grade; }
 
-    int getDisc() { return _disc; }
+    int getDisc() const { return _disc; }
 
-    int getLow() { return _low; }
+    int getLow() const { return _low; }
     
     int getStackMember() { return _stackMember; }
+
+    /*=================================================== 
+    UNNECESSARY for the project but useful for debugging.
+    ====================================================*/
+    friend ostream &operator<<(ostream &o, const Vertix &vertix) {
+        o << vertix.getGrade();
+        return o;
+    }
+    /*===================================================*/
 };
 
 class Node {
@@ -49,10 +58,14 @@ class Node {
 
     list<Vertix*> getAdj() { return _adj; }
 
+    /*=================================================== 
+    UNNECESSARY for the project but useful for debugging.
+    ====================================================*/
     friend ostream &operator<<(ostream &o, const Node &node) {
-        o << "nota " << node.getVertix()->getGrade() << endl;
+        o << *node.getVertix();
         return o;
     }
+    /*===================================================*/
 };
 
 class Graph {
@@ -64,11 +77,27 @@ class Graph {
 
     void addNode(Node* node) { _nodes.push_back(node); }
  
-    vector<Node*> getNodes() { return _nodes; }
+    vector<Node*> getNodes() const { return _nodes; }
+
+    /*=================================================== 
+    UNNECESSARY for the project but useful for debugging.
+    ====================================================*/
+    friend ostream &operator<<(ostream &o, const Graph &graph) {
+        for (Node *n : graph.getNodes()) {
+            o << *n << " - ";
+            for (Vertix *v : n->getAdj()) {
+                o << *v << " ";
+            }
+            o << endl;
+        }
+        return o;
+    }
+    /*===================================================*/
 };
 
-int main() {
+Graph* graphInit() {
     int students, relationships, grade, from, to;
+    Graph *graph = new Graph(students);
     
     if (!scanf("%d,%d", &students, &relationships)) { // Scans the first line of input
         printf("Error on scanf\n");
@@ -79,8 +108,6 @@ int main() {
         printf("Error on input\n");
         exit(EXIT_FAILURE);
     }
-
-    Graph *graph = new Graph(students);
 
     for (int i = 0; i < students; i++) { // Creates vertices and adds them to graph
         scanf("%d", &grade);
@@ -93,7 +120,12 @@ int main() {
         scanf("%d %d", &from, &to);
         graph->getNodes().at(from-1)->addAdj(graph->getNodes().at(to-1)->getVertix());
     }
+    return graph;
+}
 
+int main() {
+    Graph *graph = graphInit();
+    cout << *graph;
     return 0;
 }
 
