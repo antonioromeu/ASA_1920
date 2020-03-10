@@ -75,11 +75,14 @@ class Node {
 class Graph {
     int _numberNodes;
     vector<Node*> _nodes;
+    vector<vector<int>> _SCCs;
 
     public:
     Graph(int numberNodes) { _numberNodes = numberNodes; }
 
     void addNode(Node* node) { _nodes.push_back(node); }
+
+    vector<vector<int>> getSCCs() { return _SCCs; }
  
     vector<Node*> getNodes() const { return _nodes; }
 
@@ -111,35 +114,35 @@ class Graph {
             Vertix* adjacent = i;
             if (adjacent->getDisc() == NIL) {
                 SCCaux(adjacent, st); ////////////////////////////////////////////
-                if (vertix->getIndex() == 1) { cout << "2 low: " << vertix->getLow() << " adj: " << adjacent->getIndex()+1 << ' ' << adjacent->getLow() << endl; }
                 vertix->setLow(min(vertix->getLow(), adjacent->getLow()));
             }
             else if (adjacent->isStackMember()) {
-                if (vertix->getIndex() == 2) { cout << "3 low: " << vertix->getLow() << " adj: " << adjacent->getIndex()+1 << ' ' << adjacent->getDisc() << endl; }
-                vertix->setLow(min(vertix->getLow(), adjacent->getDisc()));
+                vertix->setLow(min(vertix->getLow(), adjacent->getLow()));
             }
         }
-
+        vector<int> nSCC;
         Vertix* v;
-        if (vertix->getLow() == vertix->getLow()) { 
+        if (vertix->getLow() == vertix->getDisc()) { 
             while (st->top()->getIndex() != vertix->getIndex()) { 
                 v = (Vertix*) st->top(); 
-                cout << *v << " "; 
+                //cout << *v << " "; 
                 v->setStackMember(false);
+                nSCC.push_back(v->getIndex());
                 st->pop(); 
             } 
             v = (Vertix*) st->top(); 
-            cout << *v << endl; 
+            //cout << *v << endl; 
             v->setStackMember(false);
+            nSCC.push_back(v->getIndex());
             st->pop(); 
-        } 
+        }
+        _SCCs.push_back(nSCC);
     }
 
     void SCC() {
         stack<Vertix*>* st = new stack<Vertix*>();
         for (int i = 0; i < _nodes.size(); i++) {
             Vertix* vertix = _nodes[i]->getVertix();
-            cout << "============" << *vertix << endl;
             if (vertix->getDisc() == NIL)
                 SCCaux(vertix, st);
         }
@@ -177,5 +180,12 @@ Graph* graphInit() {
 int main() {
     Graph *graph = graphInit();
     graph->SCC();
+    /*
+    for (vector<int> i : graph->getSCCs()) {
+        for (int e : i) {
+            cout << e << ' ';
+        }
+        cout << "\n";
+    }*/
     return 0;
 }
