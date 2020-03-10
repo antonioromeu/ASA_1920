@@ -101,9 +101,9 @@ class Graph {
     }
     ===================================================*/
     friend ostream &operator<<(ostream &o, const Graph &graph) {
-        for (Node *n : graph.getNodes()) {
+        for (Node *n : graph.getNodes())
             o << n->getVertix()->getGrade() << endl;
-        }
+        return o;
     }
 
     void SCCaux(Vertix* vertix, stack<Vertix*> st[]) {
