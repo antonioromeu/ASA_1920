@@ -40,7 +40,7 @@ class Vertix {
     UNNECESSARY for the project but useful for debugging.
     ====================================================*/
     friend ostream &operator<<(ostream &o, const Vertix &vertix) {
-        o << vertix.getIndex()+1 << " low-" << vertix.getLow();
+        o << vertix.getIndex()+1 << " grade-" << vertix.getGrade();
         return o;
     }
     /*===================================================*/
@@ -75,20 +75,20 @@ class Node {
 class Graph {
     int _numberNodes;
     vector<Node*> _nodes;
-    vector<vector<int>> _SCCs;
+    /*vector<vector<int>> _SCCs;*/
 
     public:
     Graph(int numberNodes) { _numberNodes = numberNodes; }
 
     void addNode(Node* node) { _nodes.push_back(node); }
 
-    vector<vector<int>> getSCCs() { return _SCCs; }
+    /*vector<vector<int>> getSCCs() { return _SCCs; }*/
  
     vector<Node*> getNodes() const { return _nodes; }
 
     /*=================================================== 
     UNNECESSARY for the project but useful for debugging.
-    ====================================================*/
+    ====================================================
     friend ostream &operator<<(ostream &o, const Graph &graph) {
         for (Node *n : graph.getNodes()) {
             o << *n << " - ";
@@ -99,7 +99,12 @@ class Graph {
         }
         return o;
     }
-    /*===================================================*/
+    ===================================================*/
+    friend ostream &operator<<(ostream &o, const Graph &graph) {
+        for (Node *n : graph.getNodes()) {
+            o << n->getVertix()->getGrade() << endl;
+        }
+    }
 
     void SCCaux(Vertix* vertix, stack<Vertix*> st[]) {
         Node* node =_nodes.at(vertix->getIndex());
@@ -115,9 +120,11 @@ class Graph {
             if (adjacent->getDisc() == NIL) {
                 SCCaux(adjacent, st); ////////////////////////////////////////////
                 vertix->setLow(min(vertix->getLow(), adjacent->getLow()));
+                vertix->setGrade(max(vertix->getGrade(), adjacent->getGrade()));
             }
             else if (adjacent->isStackMember()) {
                 vertix->setLow(min(vertix->getLow(), adjacent->getLow()));
+                vertix->setGrade(max(vertix->getGrade(), adjacent->getGrade()));
             }
         }
         vector<int> nSCC;
@@ -135,8 +142,8 @@ class Graph {
             v->setStackMember(false);
             nSCC.push_back(v->getIndex());
             st->pop(); 
+        //_SCCs.push_back(nSCC);
         }
-        _SCCs.push_back(nSCC);
     }
 
     void SCC() {
@@ -183,9 +190,11 @@ int main() {
     /*
     for (vector<int> i : graph->getSCCs()) {
         for (int e : i) {
-            cout << e << ' ';
+            cout << *graph->getNodes().at(e) << " | ";
         }
         cout << "\n";
-    }*/
+    }
+    */
+    cout << *graph;
     return 0;
 }
