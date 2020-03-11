@@ -1,5 +1,4 @@
 #include <iostream>
-#include <list>
 #include <vector>
 #include <stack>
 #define NIL -1
@@ -35,15 +34,16 @@ class Graph {
         st->push(vertix);
         for (int i = 0; i < (int) getAdjList(vertix).size(); i++) {
             int adjacent = getAdjList(vertix)[i];
+            //grades[vertix] = max(grades[vertix], grades[adjacent]);
             if (disc[adjacent] == NIL) {
                 SCCaux(adjacent);
                 low[vertix] = min(low[vertix], low[adjacent]);
-                grades[vertix] = max(grades[vertix], grades[adjacent]);
+                //grades[vertix] = max(grades[vertix], grades[adjacent]);
             }
             else if (stackMember[adjacent]) {
                 low[vertix] = min(low[vertix], disc[adjacent]);
-                grades[vertix] = max(grades[vertix], grades[adjacent]);
             }
+            grades[vertix] = max(grades[vertix], grades[adjacent]);
         }
         if (low[vertix] == disc[vertix]) { 
             int v;
