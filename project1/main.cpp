@@ -9,8 +9,7 @@ using namespace std;
 class Graph {
     int _students, _relationships;
     bool *_disc;
-    vector<int> _grades;
-    vector<int> *_adj;
+    vector<int> _grades, *_adj;
 
     public:
     Graph(int students, int relationships) {
@@ -21,8 +20,6 @@ class Graph {
         _disc = new bool[students];
     }
 
-    void setStudents(int students) { _students = students; }
-    void setRelationships(int relationships) { _relationships = relationships; }
     void setGrade(int grade) { _grades.push_back(grade); }
     void setDisc(int index, bool b) { _disc[index] = b; }
     void setAdj(int index, int adj) { _adj[index].push_back(adj); }
@@ -45,7 +42,6 @@ class Graph {
     vector<int> DFS() {
         for (int i = 0; i < _students; i++)
             setDisc(i, false);
-
         for (int i = 0; i < _students; i++)
             if (!_disc[i])
                 DFSaux(i);
@@ -79,6 +75,7 @@ void free(Graph *graph) { graph->freeG(); }
 
 int main() {
     int students, relationships;
+
     if (!scanf("%d,%d", &students, &relationships)) {
         printf("Error on scanf\n");
         exit(EXIT_FAILURE);
@@ -88,13 +85,14 @@ int main() {
         exit(EXIT_FAILURE);
     }
     Graph *g = graphInit(students, relationships);
-
     vector<int> grades = *(new vector<int>[students]);
     vector<int> newGrades = *(new vector<int>[students]);
+
     grades = g->getGrades();
     while (grades != (newGrades = g->DFS())) {
         grades = newGrades;
     }
+    
     g->printGrades();
     free(g);
     return 0;
