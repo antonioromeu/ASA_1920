@@ -84,11 +84,11 @@ class Graph {
             if (adjacent->getDisc() == NIL) {
                 SCCaux(adjacent, st);
                 vertix->setLow(min(vertix->getLow(), adjacent->getLow()));
-                vertix->setGrade(max(vertix->getGrade(), adjacent->getGrade()));
+                //vertix->setGrade(max(vertix->getGrade(), adjacent->getGrade()));
             }
             else if (adjacent->isStackMember()) {
                 vertix->setLow(min(vertix->getLow(), adjacent->getLow()));
-                vertix->setGrade(max(vertix->getGrade(), adjacent->getGrade()));
+                //vertix->setGrade(max(vertix->getGrade(), adjacent->getGrade()));
             }
         }
         vector<int> nSCC;
