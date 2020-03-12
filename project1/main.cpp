@@ -19,38 +19,35 @@ class Graph {
         _disc = new bool[students];
     }
 
-    void setStudents(int students) { _students = students; }
-    void setRelationships(int relationships) { _relationships = relationships; }
     void setGrade(int index, int grade) { _grades[index] = grade; }
     void setDisc(int index, bool b) { _disc[index] = b; }
     vector<int> getAdjList(int index) { return _adj[index]; }
     void setAdj(int index, int adj) { _adj[index].push_back(adj); }
     void freeG() { delete[] _adj; }
 
-    void propagateDiscs(int vertix) {
-        _disc[vertix] = false;
-        int grade = _grades[vertix];
-        for (int i = 0; i < (int) getAdjList(vertix).size(); i++) {
-            int adjacent = getAdjList(vertix)[i];
-            printf("v-%d a-%d\n", vertix, adjacent); fflush(stdout);
-            if (_disc[adjacent] && _grades[adjacent] < grade)
+    void propagateDiscs(int vertex) {
+        _disc[vertex] = false;
+        int grade = _grades[vertex];
+        for (int i = 0; i < (int) getAdjList(vertex).size(); i++) {
+            int adjacent = getAdjList(vertex)[i];
+            if (_grades[adjacent] < grade)
                 propagateDiscs(adjacent);
             _disc[i] = false;
         }
     }
 
-    void DFSaux(int vertix) {
-        _disc[vertix] = true;
-        for (int i = 0; i < (int) getAdjList(vertix).size(); i++) {
+    void DFSaux(int vertex) {
+        _disc[vertex] = true;
+        for (int i = 0; i < (int) getAdjList(vertex).size(); i++) {
             while (true) {
-                int grade = _grades[vertix];
-                int adjacent = getAdjList(vertix)[i];
+                int grade = _grades[vertex];
+                int adjacent = getAdjList(vertex)[i];
                 if (!_disc[adjacent])
                     DFSaux(adjacent);
-                _grades[vertix] = max(_grades[vertix], _grades[adjacent]);
+                _grades[vertex] = max(_grades[vertex], _grades[adjacent]);
 
-                if (_grades[vertix] == grade) break;
-                else propagateDiscs(vertix);
+                if (_grades[vertex] == grade) break;
+                else propagateDiscs(vertex);
             }
         }
     }
