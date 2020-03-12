@@ -2,50 +2,63 @@
 #include <vector>
 #include <stack>
 #define NIL -1
-#define min(a, b) (a < b ? a : b)
 #define max(a, b) (a < b ? b : a)
 using namespace std;
 
 class Graph {
-    int _students, _relationships;
+    int _students, _relationships, *_grades;
     bool *_disc;
-    vector<int> _grades, *_adj;
+    vector<int> *_adj;
 
     public:
     Graph(int students, int relationships) {
         _students = students;
         _relationships = relationships;
-        _adj = new vector<int>[students];
-        _grades = *(new vector<int>[students]);
+        _adj = new vector<int>[_students];
+        _grades = new int[students];
         _disc = new bool[students];
     }
 
-    void setGrade(int grade) { _grades.push_back(grade); }
+    void setStudents(int students) { _students = students; }
+    void setRelationships(int relationships) { _relationships = relationships; }
+    void setGrade(int index, int grade) { _grades[index] = grade; }
     void setDisc(int index, bool b) { _disc[index] = b; }
-    void setAdj(int index, int adj) { _adj[index].push_back(adj); }
-    
     vector<int> getAdjList(int index) { return _adj[index]; }
-    vector<int> getGrades() { return _grades; }
-    
-    void freeG() { delete[] _adj; delete[] _disc; }
+    void setAdj(int index, int adj) { _adj[index].push_back(adj); }
+    void freeG() { delete[] _adj; }
+
+    void propagateDiscs(int vertix) {
+        _disc[vertix] = false;
+        int grade = _grades[vertix];
+        for (int i = 0; i < (int) getAdjList(vertix).size(); i++) {
+            int adjacent = getAdjList(vertix)[i];
+            printf("v-%d a-%d\n", vertix, adjacent); fflush(stdout);
+            if (_disc[adjacent] && _grades[adjacent] < grade)
+                propagateDiscs(adjacent);
+            _disc[i] = false;
+        }
+    }
 
     void DFSaux(int vertix) {
         _disc[vertix] = true;
         for (int i = 0; i < (int) getAdjList(vertix).size(); i++) {
-            int adjacent = getAdjList(vertix)[i];
-            if (!_disc[adjacent])
-                DFSaux(adjacent);
-            _grades[vertix] = max(_grades[vertix], _grades[adjacent]);
+            while (true) {
+                int grade = _grades[vertix];
+                int adjacent = getAdjList(vertix)[i];
+                if (!_disc[adjacent])
+                    DFSaux(adjacent);
+                _grades[vertix] = max(_grades[vertix], _grades[adjacent]);
+
+                if (_grades[vertix] == grade) break;
+                else propagateDiscs(vertix);
+            }
         }
     }
 
-    vector<int> DFS() {
-        for (int i = 0; i < _students; i++)
-            setDisc(i, false);
+    void DFS() {
         for (int i = 0; i < _students; i++)
             if (!_disc[i])
                 DFSaux(i);
-        return _grades;
     }
 
     void printGrades() {
@@ -57,17 +70,15 @@ class Graph {
 Graph* graphInit(int students, int relationships) {
     int grade, from, to;
     Graph* graph = new Graph(students, relationships);
-    
     for (int i = 0; i < students; i++) {
         scanf("%d", &grade);
-        graph->setGrade(grade);
+        graph->setGrade(i, grade);
+        graph->setDisc(i, false);
     }
-
     for (int i = 0; i < relationships; i++) {
         scanf("%d %d", &from, &to);
         graph->setAdj(from-1, to-1);
     }
-
     return graph;
 }
 
@@ -75,7 +86,6 @@ void free(Graph *graph) { graph->freeG(); }
 
 int main() {
     int students, relationships;
-
     if (!scanf("%d,%d", &students, &relationships)) {
         printf("Error on scanf\n");
         exit(EXIT_FAILURE);
@@ -85,14 +95,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
     Graph *g = graphInit(students, relationships);
-    vector<int> grades = *(new vector<int>[students]);
-    vector<int> newGrades = *(new vector<int>[students]);
-
-    grades = g->getGrades();
-    while (grades != (newGrades = g->DFS())) {
-        grades = newGrades;
-    }
-    
+    g->DFS();
     g->printGrades();
     free(g);
     return 0;
