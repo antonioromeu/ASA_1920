@@ -1,6 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <chrono>
 #define NIL -1
 #define max(a, b) (a < b ? b : a)
 using namespace std;
@@ -8,8 +7,7 @@ using namespace std;
 class Graph {
     int _students, _relationships;
     bool *_disc;
-    vector<int> _grades;
-    vector<int> *_adj;
+    vector<int> _grades, *_adj;
 
     public:
     Graph(int students, int relationships) {
@@ -77,8 +75,6 @@ void free(Graph *graph) { graph->freeG(); }
 int main() {
     int students, relationships;
 
-    auto start = chrono::steady_clock::now();
-
     if (!scanf("%d,%d", &students, &relationships)) {
         printf("Error on scanf\n");
         exit(EXIT_FAILURE);
@@ -98,13 +94,5 @@ int main() {
 
     g->printGrades();
     free(g);
-
-    auto end = chrono::steady_clock::now(); //////////////////////////
-    auto diff = end - start;
-    
-    cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
-
-
-    printf("%d %d\n", students, relationships);
     return 0;
 }
