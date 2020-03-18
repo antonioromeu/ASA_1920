@@ -8,13 +8,13 @@
 using namespace std;
 
 stack<int> *st = new stack<int>();
-stack<int> *stSCCs = new stack<int>();//////////////////
+stack<int> *stSCCs = new stack<int>(); //stack of recently discovered SCCs whose father vertice has not be assigned to an SCC
 vector<bool> stackMember;
 vector<int> low; 
 
 int nSCCs = 0;
-int *studentsSCC; //eh preciso inicializar com tamanho n students
-vector<int> gradesSCC;
+int *studentsSCC; //array of size n students, that assigns each student index to its correspondant SCC index
+vector<int> gradesSCC; //vector of the grades corresponding to each SCC
 vector<vector<int>> adjSCCmatrix;
 
 class Graph {
@@ -70,7 +70,7 @@ vector<int> DFS(Graph *graph) {
 }
 
 int SCCaux(Graph *graph, int vertice, int time_) {
-    int nAdjSCCs = 0 ;
+    int nAdjSCCs = 0; // number of already discovered adjacent SCCs (adjacent to the current vertice)
     low[vertice] = ++time_;
     graph->setDisc(vertice, time_);
     stackMember[vertice] = true;
@@ -78,9 +78,7 @@ int SCCaux(Graph *graph, int vertice, int time_) {
     for (int i = 0; i < (int) graph->getAdjList(vertice).size(); i++) {
         int adjacent = graph->getAdjList(vertice)[i];
         if (graph->getDisc(adjacent) == NIL) {
-
-            nAdjSCCs += SCCaux(graph, adjacent, time_);
-
+            nAdjSCCs += SCCaux(graph, adjacent, time_); //if the adjacent vertix has been added to an SCC (or it hasnt but it has adjacent SCCs), increment the number of adjacent SCCs
             low[vertice] = min(low[vertice], low[adjacent]);
         }
         else if (stackMember[adjacent]) {
@@ -101,8 +99,8 @@ int SCCaux(Graph *graph, int vertice, int time_) {
         studentsSCC[v] = nSCCs;
         stackMember[v] = false;
         st->pop();
-        gradesSCC.push_back(graph->getGrade(v)); //colocar na lista de SCCs a "grade" do novo SCC
 
+        gradesSCC.push_back(graph->getGrade(v)); //colocar na lista de SCCs a "grade" do novo SCC
         vector<int> adjSCCs; //criar um vetor com os SCCs adjacentes ao novo SCC
         while (nAdjSCCs > 0) { 
             adjSCCs.push_back(stSCCs->top()); //colocar os SCCs nesse vetor
@@ -156,7 +154,7 @@ void free(Graph *graph) { graph->freeG(); }
 int main() {
     int students, relationships;
 
-    auto start = chrono::steady_clock::now();
+    //auto start = chrono::steady_clock::now();
 
     if (!scanf("%d,%d", &students, &relationships)) {
         printf("Error on scanf\n");
@@ -170,7 +168,7 @@ int main() {
     studentsSCC = new int[students];
     low = vector<int>(students, NIL);
 
-    Graph *graph = graphInit(students, relationships); //
+    Graph *graph = graphInit(students, relationships);
 
     stackMember = vector<bool>(students, false);
     SCC(graph);
@@ -184,8 +182,9 @@ int main() {
         cout << gradesSCC[studentsSCC[i]] << endl;
     }
 
-    auto end = chrono::steady_clock::now();
+    //auto end = chrono::steady_clock::now();
 
-    auto diff = end - start;
+    //auto diff = end - start;
     //cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
     return 0;
+}
