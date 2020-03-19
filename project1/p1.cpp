@@ -1,7 +1,6 @@
 // First project of ASA, done by Antonio Romeu Pinheiro and Mariana Cintrao, group #26
 #include <iostream>
 #include <vector>
-#include <chrono>
 #include <stack>
 #define NIL -1
 #define max(a, b) (a < b ? b : a)
