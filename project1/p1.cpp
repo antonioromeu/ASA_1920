@@ -1,3 +1,4 @@
+// First project of ASA, done by Antonio Romeu Pinheiro and Mariana Cintrao, group #26
 #include <iostream>
 #include <vector>
 #include <chrono>
@@ -8,13 +9,13 @@
 using namespace std;
 
 stack<int> *st = new stack<int>();
-stack<int> *stSCCs = new stack<int>(); //stack of recently discovered SCCs whose father vertice has not be assigned to an SCC
+stack<int> *stSCCs = new stack<int>(); // stack of recently discovered SCCs whose father vertice has not be assigned to an SCC
 vector<bool> stackMember;
 vector<int> low; 
 
 int nSCCs = 0;
-int *studentsSCC; //array of size n students, that assigns each student index to its correspondant SCC index
-vector<int> gradesSCC; //vector of the grades corresponding to each SCC
+int *studentsSCC; // array of size n students, that assigns each student index to its correspondant SCC index
+vector<int> gradesSCC; // vector of the grades corresponding to each SCC
 vector<vector<int>> adjSCCmatrix;
 
 class Graph {
@@ -30,6 +31,7 @@ class Graph {
         _adj = new vector<int>[vertices];
         _grades = *(new vector<int>[vertices]);
     }
+    
     Graph() {
         _vertices = nSCCs;
         _disc = vector<int>(_vertices, 0);
@@ -38,13 +40,16 @@ class Graph {
     }
 
     void addGrade(int grade) { _grades.push_back(grade); }
+    
     void setGrade(int index, int grade) { _grades[index] = grade;  }
     void setAdj(int index, int adj) { _adj[index].push_back(adj); }
     void setAdjs(int index, vector<int> adjs) {_adj[index] = adjs; }
     void setDisc(int index, int disc) { _disc[index] = disc; }
+    
     int getVertices() { return _vertices; }
     int getDisc(int i) { return _disc[i]; }
     int getGrade(int index) { return _grades[index]; }
+    
     vector<int> getAdjList(int index) { return _adj[index]; }
     vector<int> getGrades() { return _grades; }
 
@@ -56,8 +61,10 @@ void DFSaux(Graph *graph, int vertice) {
     graph->setDisc(vertice, 1);
     for (int i = 0; i < (int) graph->getAdjList(vertice).size(); i++) {
         int adjacent = graph->getAdjList(vertice)[i];
+        
         if (!graph->getDisc(adjacent))
             DFSaux(graph, adjacent);
+        
         graph->setGrade(vertice, max(graph->getGrade(vertice), graph->getGrade(adjacent)));
     }
 }
@@ -66,6 +73,7 @@ vector<int> DFS(Graph *graph) {
     for (int i = 0; i < graph->getVertices(); i++) 
         if (!graph->getDisc(i))
             DFSaux(graph, i);
+    
     return graph->getGrades();
 }
 
@@ -75,61 +83,74 @@ int SCCaux(Graph *graph, int vertice, int time_) {
     graph->setDisc(vertice, time_);
     stackMember[vertice] = true;
     st->push(vertice);
+    
     for (int i = 0; i < (int) graph->getAdjList(vertice).size(); i++) {
         int adjacent = graph->getAdjList(vertice)[i];
+        
         if (graph->getDisc(adjacent) == NIL) {
-            nAdjSCCs += SCCaux(graph, adjacent, time_); //if the adjacent vertix has been added to an SCC (or it hasnt but it has adjacent SCCs), increment the number of adjacent SCCs
+            //if the adjacent vertix has been added to an SCC
+            // (or it hasnt but it has adjacent SCCs), increment the number of adjacent SCCs
+            nAdjSCCs += SCCaux(graph, adjacent, time_);
             low[vertice] = min(low[vertice], low[adjacent]);
         }
-        else if (stackMember[adjacent]) {
+        
+        else if (stackMember[adjacent])
             low[vertice] = min(low[vertice], graph->getDisc(adjacent));
-        }
+        
         graph->setGrade(vertice, max(graph->getGrade(vertice), graph->getGrade(adjacent)));
     }
     
     if (low[vertice] == graph->getDisc(vertice)) { 
         int v;
+        
         while (st->top() != vertice) { 
             v = (int) st->top(); 
             studentsSCC[v] = nSCCs;
             stackMember[v] = false;
             st->pop();
-        } 
+        }
+
         v = (int) st->top();
         studentsSCC[v] = nSCCs;
         stackMember[v] = false;
         st->pop();
+        gradesSCC.push_back(graph->getGrade(v)); // add to the list of SCCs the grade of the new SCC
+        vector<int> adjSCCs;
 
-        gradesSCC.push_back(graph->getGrade(v)); //colocar na lista de SCCs a "grade" do novo SCC
-        vector<int> adjSCCs; //criar um vetor com os SCCs adjacentes ao novo SCC
-        while (nAdjSCCs > 0) { 
-            adjSCCs.push_back(stSCCs->top()); //colocar os SCCs nesse vetor
-            stSCCs->pop(); //retira-los da pilha
+        while (nAdjSCCs > 0) {
+            // this removes from the newly created SCCs stack (stSCCs)
+            // the amount of indexes given by the number of adjacent SCCs (nAdjSCCs) 
+            // thus creating an adjacent SCC vector
+            adjSCCs.push_back(stSCCs->top());
+            stSCCs->pop();
             nAdjSCCs--;
         }
-        adjSCCmatrix.push_back(adjSCCs); //colocar na matrix de adjacencias o vetor de SCCs adjacentes ao novo vetor
-        stSCCs->push(nSCCs); // colocar o novo SCC na pilha de SCC recem criados
 
+        adjSCCmatrix.push_back(adjSCCs); // add the vector of adjacent SCC of the new vector to the matrix of adjacencies
+        stSCCs->push(nSCCs); // add the new SCC to the stack of recently discovered SCCs
         nAdjSCCs++;
         nSCCs++;
     }
+    
     return nAdjSCCs;
 }
 
 void SCC(Graph *graph) {
     static int time_ = 0;
     int vertices = graph->getVertices();
-    for (int i = 0; i < vertices; i++) {
+
+    for (int i = 0; i < vertices; i++)
         if (graph->getDisc(i) == NIL)
             SCCaux(graph, i, time_);
-    }
 }
 
 Graph* compactGraphInit() {
     Graph *graph = new Graph();
+    
     for (int i = 0; i < nSCCs; i++) {
         graph->setAdjs(i, adjSCCmatrix[i]);
     }
+    
     return graph;
 }
 
@@ -146,6 +167,7 @@ Graph* graphInit(int vertices, int relationships) {
         scanf("%d %d", &from, &to);
         graph->setAdj(from-1, to-1);
     }
+    
     return graph;
 }
 
@@ -154,12 +176,11 @@ void free(Graph *graph) { graph->freeG(); }
 int main() {
     int students, relationships;
 
-    //auto start = chrono::steady_clock::now();
-
     if (!scanf("%d,%d", &students, &relationships)) {
         printf("Error on scanf\n");
         exit(EXIT_FAILURE);
     }
+    
     if (students < 2 || relationships < 1) {
         printf("Error on input\n");
         exit(EXIT_FAILURE);
@@ -167,24 +188,20 @@ int main() {
 
     studentsSCC = new int[students];
     low = vector<int>(students, NIL);
-
+    
     Graph *graph = graphInit(students, relationships);
-
     stackMember = vector<bool>(students, false);
     SCC(graph);
     graph->freeG();
+    delete(graph);
 
     Graph *compressedGraph = compactGraphInit();
     vector<int> gradesSCC = DFS(compressedGraph);
     compressedGraph->freeG();
+    delete(compressedGraph);
 
-    for (int i = 0; i < students; i++) {
+    for (int i = 0; i < students; i++)
         cout << gradesSCC[studentsSCC[i]] << endl;
-    }
 
-    //auto end = chrono::steady_clock::now();
-
-    //auto diff = end - start;
-    //cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
     return 0;
 }
