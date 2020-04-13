@@ -15,7 +15,7 @@ vector<int> low;
 int nSCCs = 0;
 int *studentsSCC; // array of size n students, that assigns each student index to its correspondant SCC index
 vector<int> gradesSCC; // vector of the grades corresponding to each SCC
-vector<vector<int>> adjSCCmatrix;
+vector<vector<int>> adjSCClist;
 
 class Graph {
     int _vertices;
@@ -125,7 +125,7 @@ int SCCaux(Graph *graph, int vertice, int time_) {
             nAdjSCCs--;
         }
 
-        adjSCCmatrix.push_back(adjSCCs); // add the vector of adjacent SCC of the new vector to the matrix of adjacencies
+        adjSCClist.push_back(adjSCCs); // add the vector of adjacent SCC of the new vector to the adjacencies' vector
         stSCCs->push(nSCCs); // add the new SCC to the stack of recently discovered SCCs
         nAdjSCCs++;
         nSCCs++;
@@ -147,7 +147,7 @@ Graph* compactGraphInit() {
     Graph *graph = new Graph();
     
     for (int i = 0; i < nSCCs; i++) {
-        graph->setAdjs(i, adjSCCmatrix[i]);
+        graph->setAdjs(i, adjSCClist[i]);
     }
     
     return graph;
