@@ -39,6 +39,7 @@ class Graph {
     }
 
     vector<vector<int>> getAdjacencies() { return _adjacencies; }
+    vector<vector<int>> getFlow() { return _flow; }
     
     int getAvenues() { return _avenues; }
     int getStreets() { return _streets; }
@@ -77,44 +78,57 @@ class Graph {
     }
     */
 
-    bool bfs(int rGraph[V][V], int s, int t, int parent[]) {
-        bool visited[V]; 
-        memset(visited, 0, sizeof(visited)); 
-        queue <int> q; 
-        q.push(s); 
-        visited[s] = true; 
-        parent[s] = -1; 
-        while (!q.empty()) { 
-            int u = q.front(); 
-            q.pop(); 
-            for (int v=0; v<V; v++) { 
-                if (visited[v]==false && rGraph[u][v] > 0) {
-                    q.push(v);
-                    parent[v] = u;
-                    visited[v] = true; 
+    int bfs(int s, int t, vector<int>& parent) {
+        fill(parent.begin(), parent.end(), -1);
+        parent[s] = -2;
+        queue<pair<int, int>> q;
+        q.push({s, 999});
+
+        while (!q.empty()) {
+            int cur = q.front().first;
+            //int flow = q.front().second;
+            q.pop();
+
+            //for (int next : _adjacencies[cur]) {
+            for (int i = 0; i < _totalNodes; i++) {
+                int val = _adjacencies[cur][i];
+                printf("current: %d adjacent: %d\n",cur, i);
+                printf("parent[adjacent]: %d\n", parent[i]);
+                //if (next == 1) {
+                if (parent[i] == -1 && (val==1 && _flow[cur][i]==0 && _flow[i][cur]==0)) {
+                    parent[i] = cur;
+                    int new_flow = 1;
+                    if (i == t)
+                        return new_flow;
+                    q.push({i, new_flow});
+                   // }
                 }
             }
         }
-        return (visited[t] == true); 
+        printf("retornou 0\n");
+        return 0;
     }
 
-    int edmondsKarp(int source, int sink) {
-        int maxFlow = 0;
-        while (true) {
-            int flow = BFS(source, sink);
-            if (flow == 0)
-                break;
-            maxFlow += flow;
-            int currentNode = sink;
-            while (currentNode != source) {
-                int previousNode = _parentsList[currentNode];
-                _flow[previousNode][currentNode] += flow;
-                _flow[currentNode][previousNode] -= flow;
-                currentNode = previousNode;
+    int edmondsKarp(int s, int t) {
+        int flow = 0;
+        vector<int> parent(_totalNodes);
+        int new_flow;
+
+        printf("inicio do ek\n");
+
+        while ((new_flow = bfs(s, t, parent)) != 0) {
+            printf("dentro do while\n");
+            flow += new_flow;
+            int cur = t;
+            while (cur != s) {
+                int prev = parent[cur];
+                _flow[prev][cur] -= new_flow;
+                _flow[cur][prev] += new_flow;
+                cur = prev;
             }
         }
-        printf("%d\n", maxFlow);
-        return maxFlow;
+        printf("%d\n", flow);
+        return flow;
     }
 };
 
@@ -122,6 +136,14 @@ void printGraph(Graph* g) {
     for (int i = 0; i < (g->getAvenues() * g->getStreets()) + 2; i++) {
         for (int j = 0; j < g->getTotalNodes(); j++)
             printf("%d ", g->getAdjacencies()[i][j]);
+        printf("\n");
+    }
+}
+
+void printFlow(Graph* g) {
+    for (int i = 0; i < g->getTotalNodes(); i++) {
+        for (int j = 0; j < g->getTotalNodes(); j++)
+            printf("%d ", g->getFlow()[i][j]);
         printf("\n");
     }
 }
@@ -157,8 +179,9 @@ int main() {
         scanf("%d %d", &av, &st);
         graph->addClient(av, st);
     }
-    graph->edmondsKarp(0, graph->getTotalNodes());
-    printGraph(graph);
+    graph->edmondsKarp(0, graph->getTotalNodes()-1);
+    //printGraph(graph);
+    printFlow(graph);
 
     return 0;
 }
