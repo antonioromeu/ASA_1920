@@ -8,7 +8,9 @@ using namespace std;
 class Graph {
     int _avenues, _streets, _totalNodes;
     vector<vector<int>> _adjacencies, _flow;
-    vector<int> _parentsList, _currentPathCapacity;
+    vector<int> _parentsList;//, _currentPathCapacity;
+    vector<bool> _visited;
+
 
     public:
     Graph(int avenues, int streets) {
@@ -16,29 +18,28 @@ class Graph {
         _streets = streets;
         _totalNodes = _avenues * _streets + 2;
         vector<int> tmpzeros(avenues * streets + 2, 0);
-        _adjacencies.push_back(tmpzeros);
+        _adjacencies.push_back({});
         _flow.push_back(tmpzeros);
-        for (int i = 1; i < avenues * streets + 1; i++) {
+        for (int i = 1; i < _totalNodes - 1; i++) {
             vector<int> tmp;
-            for (int j = 0; j < avenues*streets + 2; j++) {
-                if (i % _avenues != 1 && j == i - 1) tmp.push_back(1);
-                else if (j == i - _avenues) tmp.push_back(1);
-                else if (i % _avenues != 0 && j== i+1) tmp.push_back(1);
-                else if (j == i + _avenues) tmp.push_back(1);
-                else tmp.push_back(0);
+            for (int j = 1; j < _totalNodes - 1; j++) {
+                if (i % _avenues != 1 && j == i - 1) tmp.push_back(j);
+                else if (j == i - _avenues) tmp.push_back(j);
+                else if (i % _avenues != 0 && j== i+1) tmp.push_back(j);
+                else if (j == i + _avenues) tmp.push_back(j);
             }
             _adjacencies.push_back(tmp);
             _flow.push_back(tmpzeros);
         }
-        _adjacencies.push_back(tmpzeros);
+        _adjacencies.push_back({});
         _flow.push_back(tmpzeros);
-        vector<int> temp1(avenues * streets, -1);
-        _parentsList = temp1;
-        vector<int> temp2(avenues * streets, 0);
-        _currentPathCapacity = temp2;
+        vector<int> parentsList(_totalNodes, -1);
+        vector<bool> visitedList(_totalNodes, false);
+        _parentsList = parentsList;
+        _visited = visitedList;
     }
 
-    vector<vector<int>> getAdjacencies() { return _adjacencies; }
+    vector<int> getAdjacencies(int i) { return _adjacencies[i]; }
     vector<vector<int>> getFlow() { return _flow; }
     
     int getAvenues() { return _avenues; }
@@ -46,83 +47,45 @@ class Graph {
     int getTotalNodes() { return _totalNodes; }
     int getIndexFromCoordinates(int av, int st) { return (st-1) * _avenues + av; }
     
-    void addMarket(int av, int st) { _adjacencies[getIndexFromCoordinates(av, st)][_avenues * _streets + 1] = 1; }
+    void addMarket(int av, int st) { _adjacencies[getIndexFromCoordinates(av, st)].push_back(_totalNodes - 1); }
 
-    void addClient(int av, int st) { _adjacencies[0][getIndexFromCoordinates(av, st)] = 1; }
-    
-    /*
-    int BFS(int source, int sink) {
-        queue<int> q;
-        q.push(source);
-        _parentsList[source] = -1;
-        _currentPathCapacity[source] = -1;
-        while (!q.empty()) {
-            int currentNode = q.front();
-            q.pop();
-            for (int i = 0; i < _totalNodes; i++) {
-                if (_adjacencies[currentNode][i] == 1) {
-                    int to = _adjacencies[currentNode][i];
-                    if (_parentsList[to] == -1) {
-                        if (_flow[currentNode][to] == 0) {
-                            _parentsList[to] = currentNode;
-                            _currentPathCapacity[to] = 1;
-                            if (to == sink)
-                                return _currentPathCapacity[sink];
-                            q.push(to);
-                        }
-                    }
-                }
-            }
-        }
-        return 0;
-    }
-    */
+    void addClient(int av, int st) { _adjacencies[0].push_back(getIndexFromCoordinates(av, st)); }
 
-    int bfs(int s, int t, vector<int>& parent) {
-        fill(parent.begin(), parent.end(), -1);
-        parent[s] = -2;
+    int bfs(int s, int t) {
+        fill(_parentsList.begin(), _parentsList.end(), -1);
+        //vector<bool> visitedList(_totalNodes, false);
+        _parentsList[s] = -2;
         queue<pair<int, int>> q;
-        q.push({s, 999});
+        q.push({s, _totalNodes});
 
         while (!q.empty()) {
             int cur = q.front().first;
-            //int flow = q.front().second;
             q.pop();
-
-            //for (int next : _adjacencies[cur]) {
-            for (int i = 0; i < _totalNodes; i++) {
-                int val = _adjacencies[cur][i];
-                printf("current: %d adjacent: %d\n",cur, i);
-                printf("parent[adjacent]: %d\n", parent[i]);
-                //if (next == 1) {
-                if (parent[i] == -1 && (val==1 && _flow[cur][i]==0 && _flow[i][cur]==0)) {
-                    parent[i] = cur;
+            for (int next : _adjacencies[cur]) {
+                if (_parentsList[next] == -1 && _flow[cur][next] == 0 && _flow[next][cur] == 0 && _visited[next]==false) {
+                    _parentsList[next] = cur;
                     int new_flow = 1;
-                    if (i == t)
+                    if (next == t) 
                         return new_flow;
-                    q.push({i, new_flow});
-                   // }
+                    q.push({next, new_flow});
                 }
             }
         }
-        printf("retornou 0\n");
         return 0;
     }
 
     int edmondsKarp(int s, int t) {
         int flow = 0;
-        vector<int> parent(_totalNodes);
+        //vector<int> parent(_totalNodes);
         int new_flow;
 
-        printf("inicio do ek\n");
-
-        while ((new_flow = bfs(s, t, parent)) != 0) {
-            printf("dentro do while\n");
+        while ((new_flow = bfs(s, t)) != 0) {
             flow += new_flow;
             int cur = t;
             while (cur != s) {
-                int prev = parent[cur];
-                _flow[prev][cur] -= new_flow;
+                int prev = _parentsList[cur];
+                _visited[prev] = true;
+                _flow[prev][cur] += new_flow;
                 _flow[cur][prev] += new_flow;
                 cur = prev;
             }
@@ -133,9 +96,10 @@ class Graph {
 };
 
 void printGraph(Graph* g) {
-    for (int i = 0; i < (g->getAvenues() * g->getStreets()) + 2; i++) {
-        for (int j = 0; j < g->getTotalNodes(); j++)
-            printf("%d ", g->getAdjacencies()[i][j]);
+    for (int i = 0; i < g->getTotalNodes(); i++) {
+        printf("%d: ", i);
+        for (int next : g->getAdjacencies(i))
+            printf("%d ", next);
         printf("\n");
     }
 }
@@ -180,8 +144,5 @@ int main() {
         graph->addClient(av, st);
     }
     graph->edmondsKarp(0, graph->getTotalNodes()-1);
-    //printGraph(graph);
-    printFlow(graph);
-
     return 0;
 }
