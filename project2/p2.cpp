@@ -8,42 +8,39 @@ using namespace std;
 vector<int> parentsList;
 vector<bool> visitedList;
 
+int maxFlow = 0;
+
 class Graph {
     int _avenues, _streets, _totalNodes;
-    vector<vector<int>> _adjacencies, _flow;
+    vector<vector<int>> _adjacencies;// _flow;
 
     public:
     Graph(int avenues, int streets) {
         _avenues = avenues;
         _streets = streets;
         _totalNodes = _avenues * _streets + 2;
-        vector<int> tmp(_totalNodes, 0);
+        vector<int> flow(_totalNodes, 0);
         _adjacencies.push_back({});
-        _flow.push_back(tmp);
+
         for (int i = 1; i < _totalNodes - 1; i++) {
             vector<int> adj;
             for (int j = 1; j < _totalNodes - 1; j++) {
-                if (i % _avenues != 1 && j == i - 1) adj.push_back(j);
-                else if (j == i - _avenues) adj.push_back(j);
-                else if (i % _avenues != 0 && j== i+1) adj.push_back(j);
-                else if (j == i + _avenues) adj.push_back(j);
+                if (j == i - _avenues) adj.push_back(j); //cima
+                if (j == i + _avenues) adj.push_back(j); //baixo
+                if (i % _avenues != 1 && j == i - 1) adj.push_back(j); //esquerda
+                if (i % _avenues != 0 && j == i+1) adj.push_back(j); //direita
             }
             _adjacencies.push_back(adj);
-            _flow.push_back(tmp);
-        }
-        _adjacencies.push_back({});
-        _flow.push_back(tmp);
+        }       
+
     }
     
-    int getFlow(int av, int st) { return _flow[av][st]; }
     vector<int> getAdjacencies(int i) { return _adjacencies[i]; }
     int getAvenues() { return _avenues; }
     int getStreets() { return _streets; }
     int getTotalNodes() { return _totalNodes; }
     int getIndexFromCoordinates(int av, int st) { return (st - 1) * _avenues + av; }
     
-    void setFlow(int av, int st, int val) { _flow[av][st] = val; }
-
     void addMarket(int av, int st) { _adjacencies[getIndexFromCoordinates(av, st)].push_back(_totalNodes - 1); }
     int addClient(int av, int st) {
         _adjacencies[0].push_back(getIndexFromCoordinates(av, st));
@@ -55,17 +52,14 @@ int bfs(Graph *graph, int s, int t) {
     fill(parentsList.begin(), parentsList.end(), -1);
     parentsList[s] = -2;
     queue<pair<int, int>> q;
-    q.push({s, graph->getTotalNodes()});
-
+    q.push({s, maxFlow}); 
+    
     while (!q.empty()) {
         int cur = q.front().first;
         q.pop();
         for (int next : graph->getAdjacencies(cur)) {
-            if (parentsList[next] == -1 && graph->getFlow(cur, next) == 0
-                    && graph->getFlow(next, cur) == 0
-                    && (visitedList[next] == false || cur == s)) {
-                
-                //printf("cur:%d -- next:%d\n", cur, next);
+
+            if (parentsList[next] == -1 && (visitedList[next] == false || next == t)) { 
                 parentsList[next] = cur;
                 int new_flow = 1;
                 if (next == t)
@@ -86,9 +80,8 @@ void edmondsKarp(Graph *graph, int s, int t) {
         int cur = t;
         while (cur != s) {
             int prev = parentsList[cur];
-            visitedList[prev] = true;
-            graph->setFlow(prev, cur, 1);
-            graph->setFlow(cur, prev, 1);
+            visitedList[cur] = true;
+            printf("c: %d p: %d \n", cur, prev);
             cur = prev;
         }
     }
@@ -100,14 +93,6 @@ void printGraph(Graph* g) {
         printf("%d: ", i);
         for (int next : g->getAdjacencies(i))
             printf("%d ", next);
-        printf("\n");
-    }
-}
-
-void printFlow(Graph* g) {
-    for (int i = 0; i < g->getTotalNodes(); i++) {
-        for (int j = 0; j < g->getTotalNodes(); j++)
-            printf("%d ", g->getFlow(i, j));
         printf("\n");
     }
 }
@@ -134,7 +119,8 @@ int main() {
     
     Graph *graph = new Graph(avenues, streets);
     int totalNodes = graph->getTotalNodes();
-    
+    maxFlow = min(markets, clients);
+
     for (int i = 0; i < totalNodes; i++) {
         parentsList.push_back(-1);
         visitedList.push_back(false);
@@ -147,9 +133,12 @@ int main() {
     for (int i = 0; i < clients; i++) {
         int av, st;
         scanf("%d %d", &av, &st);
-        visitedList[graph->addClient(av, st)] = true;
+        graph->addClient(av, st);
     }
     
     edmondsKarp(graph, 0, graph->getTotalNodes() - 1);
     return 0;
 }
+
+
+//python2.7 p2_gerador.py -n 1 -N 10 -m 1 -M 10 -s 10 -S 50 -c 10 -C 50 [-Z <some_random_seed_int>]
