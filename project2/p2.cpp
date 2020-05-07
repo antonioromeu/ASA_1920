@@ -1,5 +1,7 @@
 #include <iostream>
+#include <algorithm>
 #include <vector>
+#include <map>
 #include <queue>
 #define MARKET -1
 #define CLIENT 1
@@ -18,21 +20,24 @@ class Graph {
     Graph(int avenues, int streets) {
         _avenues = avenues;
         _streets = streets;
-        _totalNodes = _avenues * _streets + 2;
+        _totalNodes = (_avenues * _streets + 2) * 2;
         vector<int> flow(_totalNodes, 0);
-        _adjacencies.push_back({});
-
-        for (int i = 1; i < _totalNodes - 1; i++) {
+        _adjacencies.push_back({1}); _adjacencies.push_back({});
+        for (int i = 2; i < _totalNodes - 2; i++) {
             vector<int> adj;
-            for (int j = 1; j < _totalNodes - 1; j++) {
-                if (j == i - _avenues) adj.push_back(j); //cima
-                if (j == i + _avenues) adj.push_back(j); //baixo
-                if (i % _avenues != 1 && j == i - 1) adj.push_back(j); //esquerda
-                if (i % _avenues != 0 && j == i+1) adj.push_back(j); //direita
+            if (i % 2 == 1) {
+                for (int j = 2; j < _totalNodes - 2; j+=2) {
+                    if (j == i - 1 - (2 * _avenues)) adj.push_back(j); //cima
+                    if (j == i - 1 + (2 * _avenues)) adj.push_back(j); //baixo
+                    if (((i - 1) / 2) % _avenues != 1 && j == i - 3) adj.push_back(j); //esquerda
+                    if (((i - 1) / 2) % _avenues != 0 && j == i + 1) adj.push_back(j); //direita
+                }
             }
-            _adjacencies.push_back(adj);
-        }       
-
+            else adj.push_back(i+1);
+            _adjacencies.push_back(adj);       
+        }
+        _adjacencies.push_back({_totalNodes - 1});
+        _adjacencies.push_back({});
     }
     
     vector<int> getAdjacencies(int i) { return _adjacencies[i]; }
@@ -40,12 +45,13 @@ class Graph {
     int getStreets() { return _streets; }
     int getTotalNodes() { return _totalNodes; }
     int getIndexFromCoordinates(int av, int st) { return (st - 1) * _avenues + av; }
+
     
-    void addMarket(int av, int st) { _adjacencies[getIndexFromCoordinates(av, st)].push_back(_totalNodes - 1); }
-    int addClient(int av, int st) {
-        _adjacencies[0].push_back(getIndexFromCoordinates(av, st));
-        return getIndexFromCoordinates(av, st);
+    void addMarket(int av, int st) { 
+        int index = getIndexFromCoordinates(av, st) * 2 + 1;
+        _adjacencies[index].push_back(_totalNodes - 2); 
     }
+    void addClient(int av, int st) { _adjacencies[1].push_back(getIndexFromCoordinates(av, st) * 2); }
 };
 
 int bfs(Graph *graph, int s, int t) {
@@ -57,8 +63,8 @@ int bfs(Graph *graph, int s, int t) {
     while (!q.empty()) {
         int cur = q.front().first;
         q.pop();
-        for (int next : graph->getAdjacencies(cur)) {
 
+        for (int next : graph->getAdjacencies(cur)) {
             if (parentsList[next] == -1 && (visitedList[next] == false || next == t)) { 
                 parentsList[next] = cur;
                 int new_flow = 1;
@@ -81,7 +87,6 @@ void edmondsKarp(Graph *graph, int s, int t) {
         while (cur != s) {
             int prev = parentsList[cur];
             visitedList[cur] = true;
-            printf("c: %d p: %d \n", cur, prev);
             cur = prev;
         }
     }
@@ -90,9 +95,12 @@ void edmondsKarp(Graph *graph, int s, int t) {
 
 void printGraph(Graph* g) {
     for (int i = 0; i < g->getTotalNodes(); i++) {
-        printf("%d: ", i);
+        if (i%2) printf("%ds: ", (i+1)/2 - (i%2));
+        else printf("%de: ", (i+1)/2 - (i%2));
+        //printf("%d: ", i);
         for (int next : g->getAdjacencies(i))
-            printf("%d ", next);
+            if (i%2) printf("%de ", next/2);
+            else printf("%ds ", next/2);
         printf("\n");
     }
 }
@@ -136,7 +144,8 @@ int main() {
         graph->addClient(av, st);
     }
     
-    edmondsKarp(graph, 0, graph->getTotalNodes() - 1);
+    //edmondsKarp(graph, 0, graph->getTotalNodes() - 1);
+    printGraph(graph);
     return 0;
 }
 
