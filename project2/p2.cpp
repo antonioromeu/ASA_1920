@@ -2,19 +2,18 @@
 #include <algorithm>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <queue>
 #define MARKET -1
 #define CLIENT 1
 using namespace std;
 
 vector<int> parentsList;
-//vector<bool> visitedList;
-
 int maxFlow = 0;
 
 class Graph {
     int _avenues, _streets, _totalNodes;
-    vector<map<int, int>> _adjacencies;// _flow;
+    vector<map<int, int>> _adjacencies;
 
     public:
     Graph(int avenues, int streets) {
@@ -57,20 +56,19 @@ class Graph {
     void sendFlow(int prev, int cur, int flow) { 
         _adjacencies[prev].find(cur)->second -= flow;
         _adjacencies[cur].find(prev)->second += flow;
-        //if (cur == prev + 1) _adjacencies[cur].find(prev)->second += flow;
-        //else _adjacencies[cur + 1].find(prev - 1)->second += flow;
-        }
+    }
 
     void addMarket(int av, int st) { 
         int index = getIndexFromCoordinates(av, st) * 2;
         _adjacencies[index].insert({_totalNodes - 1, 1}); 
         _adjacencies[_totalNodes - 1].insert({index, 1}); 
     }
+    
     void addClient(int av, int st) { 
         int index = getIndexFromCoordinates(av, st) * 2 - 1;
         _adjacencies[0].insert({index, 1}); 
         _adjacencies[index].insert({0, 1});
-        }
+    }
 };
 
 int bfs(Graph *graph, int s, int t) {
@@ -81,7 +79,6 @@ int bfs(Graph *graph, int s, int t) {
     while (!q.empty()) {
         int cur = q.front().first;
         q.pop();
-
         for (pair<int, int> next : graph->getAdjacencies(cur)) {
             if (parentsList[next.first] == -1 && next.second > 0 && next.second <= 2) { 
                 parentsList[next.first] = cur;
@@ -102,7 +99,6 @@ void edmondsKarp(Graph *graph, int s, int t) {
         int cur = t;
         while (cur != s) {
             int prev = parentsList[cur];
-            //printf("prev: %d cur: %d\n", prev, cur);
             graph->sendFlow(prev, cur, flow);
             cur = prev;
         }
@@ -128,14 +124,17 @@ int main() {
         printf("Incorrect input\n");
         exit(EXIT_FAILURE);
     }
+    
     if (avenues < 2 || streets < 2) {
         printf("Invalid number of avenues and/or streets");
         exit(EXIT_FAILURE);
     }
+    
     if (!scanf("%d %d", &markets, &clients)) {
         printf("Incorrect input\n");
         exit(EXIT_FAILURE);
     }
+    
     if (markets < 1 || clients < 1) {
         printf("Invalid number of markets and/or citizens\n");
         exit(EXIT_FAILURE);
@@ -145,15 +144,15 @@ int main() {
     int totalNodes = graph->getTotalNodes();
     maxFlow = min(markets, clients);
 
-    for (int i = 0; i < totalNodes; i++) {
+    for (int i = 0; i < totalNodes; i++)
         parentsList.push_back(-1);
-        //visitedList.push_back(false);
-    }
+    
     for (int i = 0; i < markets; i++) {
         int av, st;
         scanf("%d %d", &av, &st);
         graph->addMarket(av, st);
     }
+    
     for (int i = 0; i < clients; i++) {
         int av, st;
         scanf("%d %d", &av, &st);
@@ -164,6 +163,3 @@ int main() {
     edmondsKarp(graph, 0, graph->getTotalNodes() - 1);
     return 0;
 }
-
-
-//python2.7 p2_gerador.py -n 1 -N 10 -m 1 -M 10 -s 10 -S 50 -c 10 -C 50 [-Z <some_random_seed_int>]
