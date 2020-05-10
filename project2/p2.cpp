@@ -14,44 +14,50 @@ int maxFlow = 0;
 
 class Graph {
     int _avenues, _streets, _totalNodes;
-    vector<vector<int>> _adjacencies;// _flow;
+    vector<map<int, int>> _adjacencies;// _flow;
 
     public:
     Graph(int avenues, int streets) {
         _avenues = avenues;
         _streets = streets;
         _totalNodes = (_avenues * _streets + 2) * 2;
-        vector<int> flow(_totalNodes, 0);
-        _adjacencies.push_back({1}); _adjacencies.push_back({});
+        map<int, int> aux;
+        aux.insert({1, min(_avenues, _streets)});
+        _adjacencies.push_back(aux);
+        aux.clear();
+        _adjacencies.push_back(aux);
         for (int i = 2; i < _totalNodes - 2; i++) {
-            vector<int> adj;
             if (i % 2 == 1) {
                 for (int j = 2; j < _totalNodes - 2; j+=2) {
-                    if (j == i - 1 - (2 * _avenues)) adj.push_back(j); //cima
-                    if (j == i - 1 + (2 * _avenues)) adj.push_back(j); //baixo
-                    if (((i - 1) / 2) % _avenues != 1 && j == i - 3) adj.push_back(j); //esquerda
-                    if (((i - 1) / 2) % _avenues != 0 && j == i + 1) adj.push_back(j); //direita
+                    if (j == i - 1 - (2 * _avenues)) aux.insert({j, 1}); //cima
+                    if (j == i - 1 + (2 * _avenues)) aux.insert({j, 1}); //baixo
+                    if (((i - 1) / 2) % _avenues != 1 && j == i - 3) aux.insert({j, 1}); //esquerda
+                    if (((i - 1) / 2) % _avenues != 0 && j == i + 1) aux.insert({j, 1}); //direita
                 }
             }
-            else adj.push_back(i+1);
-            _adjacencies.push_back(adj);       
+            else aux.insert({i + 1, 1});
+            _adjacencies.push_back(aux);
+            aux.clear();
         }
-        _adjacencies.push_back({_totalNodes - 1});
-        _adjacencies.push_back({});
+        aux.insert({_totalNodes - 1, min(_avenues, _streets)});
+        _adjacencies.push_back(aux);
+        aux.clear();
+        _adjacencies.push_back(aux);
     }
     
-    vector<int> getAdjacencies(int i) { return _adjacencies[i]; }
+    map<int, int> getAdjacencies(int i) { return _adjacencies[i]; }
     int getAvenues() { return _avenues; }
     int getStreets() { return _streets; }
     int getTotalNodes() { return _totalNodes; }
     int getIndexFromCoordinates(int av, int st) { return (st - 1) * _avenues + av; }
 
-    
+    void changeFlow(int prev, int cur, int flow) { _adjacencies[prev].find(cur)->second -= flow; }
+
     void addMarket(int av, int st) { 
         int index = getIndexFromCoordinates(av, st) * 2 + 1;
-        _adjacencies[index].push_back(_totalNodes - 2); 
+        _adjacencies[index].insert({_totalNodes - 2, 1}); 
     }
-    void addClient(int av, int st) { _adjacencies[1].push_back(getIndexFromCoordinates(av, st) * 2); }
+    void addClient(int av, int st) { _adjacencies[1].insert({getIndexFromCoordinates(av, st) * 2, 1}); }
 };
 
 int bfs(Graph *graph, int s, int t) {
@@ -59,19 +65,18 @@ int bfs(Graph *graph, int s, int t) {
     parentsList[s] = -2;
     queue<pair<int, int>> q;
     q.push({s, maxFlow}); 
-    
     while (!q.empty()) {
         int cur = q.front().first;
         q.pop();
-
-        for (int next : graph->getAdjacencies(cur)) {
-            if (parentsList[next] == -1 && (visitedList[next] == false || next == t)) { 
-                parentsList[next] = cur;
+        for (pair<int, int> next : graph->getAdjacencies(cur)) {
+            if (parentsList[next.first] == -1 && next.second > 0 && graph->getAdjacencies(next.first + 1).find(cur - 1)->second == 0) { 
+                parentsList[next.first] = cur;
                 int new_flow = 1;
-                if (next == t)
+                if (next.first == t)
                     return new_flow;
-                q.push({next, new_flow});
+                q.push({next.first, new_flow});
             }
+
         }
     }
     return 0;
@@ -80,12 +85,15 @@ int bfs(Graph *graph, int s, int t) {
 void edmondsKarp(Graph *graph, int s, int t) {
     int flow = 0;
     int new_flow;
-
     while ((new_flow = bfs(graph, s, t)) != 0) {
         flow += new_flow;
         int cur = t;
         while (cur != s) {
             int prev = parentsList[cur];
+            graph->changeFlow(prev, cur, flow);
+            //printf("%d\n", graph->getAdjacencies(prev).find(cur)->second);
+            if (prev != cur + 1)
+                graph->changeFlow(cur, prev, flow);
             visitedList[cur] = true;
             cur = prev;
         }
@@ -98,9 +106,9 @@ void printGraph(Graph* g) {
         if (i%2) printf("%ds: ", (i+1)/2 - (i%2));
         else printf("%de: ", (i+1)/2 - (i%2));
         //printf("%d: ", i);
-        for (int next : g->getAdjacencies(i))
-            if (i%2) printf("%de ", next/2);
-            else printf("%ds ", next/2);
+        for (pair<int, int> next : g->getAdjacencies(i))
+            if (i%2) printf("%de ", (next.first)/2);
+            else printf("%ds ", (next.first)/2);
         printf("\n");
     }
 }
@@ -144,8 +152,8 @@ int main() {
         graph->addClient(av, st);
     }
     
-    //edmondsKarp(graph, 0, graph->getTotalNodes() - 1);
-    printGraph(graph);
+    edmondsKarp(graph, 1, graph->getTotalNodes() - 2);
+    //printGraph(graph);
     return 0;
 }
 
