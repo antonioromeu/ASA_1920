@@ -8,7 +8,7 @@
 using namespace std;
 
 vector<int> parentsList;
-vector<bool> visitedList;
+//vector<bool> visitedList;
 
 int maxFlow = 0;
 
@@ -27,9 +27,17 @@ class Graph {
             if (i % 2 == 0) {
                 aux.insert({i - 1, 1});
                 for (int j = 1; j < _totalNodes - 1; j+=2) {
-                    if (j == i - 1 - (2 * _avenues)) aux.insert({j, 1}); //cima
+                    if (j == i - 1 - (2 * _avenues)) { //cima
+                        aux.insert({j, 1});
+                        _adjacencies[j].insert({i, 0});
+                        _adjacencies[i - 1].insert({j - 1, 0});
+                    }
+                    if ((i / 2) % _avenues != 1 && j == i - 3) { //esquerda
+                        aux.insert({j, 1}); 
+                        _adjacencies[j].insert({i, 0});
+                        _adjacencies[i - 1].insert({j + 1, 0});
+                    }
                     if (j == i - 1 + (2 * _avenues)) aux.insert({j, 1}); //baixo
-                    if ((i / 2) % _avenues != 1 && j == i - 3) aux.insert({j, 1}); //esquerda
                     if ((i / 2) % _avenues != 0 && j == i + 1) aux.insert({j, 1}); //direita
                 }
             }
@@ -46,7 +54,12 @@ class Graph {
     int getTotalNodes() { return _totalNodes; }
     int getIndexFromCoordinates(int av, int st) { return (st - 1) * _avenues + av; }
 
-    void changeFlow(int prev, int cur, int flow) { _adjacencies[prev].find(cur)->second -= flow; }
+    void sendFlow(int prev, int cur, int flow) { 
+        _adjacencies[prev].find(cur)->second -= flow;
+        _adjacencies[cur].find(prev)->second += flow;
+        //if (cur == prev + 1) _adjacencies[cur].find(prev)->second += flow;
+        //else _adjacencies[cur + 1].find(prev - 1)->second += flow;
+        }
 
     void addMarket(int av, int st) { 
         int index = getIndexFromCoordinates(av, st) * 2;
@@ -76,7 +89,6 @@ int bfs(Graph *graph, int s, int t) {
                     return 1;
                 q.push({next.first, 1});
             }
-
         }
     }
     return 0;
@@ -90,10 +102,8 @@ void edmondsKarp(Graph *graph, int s, int t) {
         int cur = t;
         while (cur != s) {
             int prev = parentsList[cur];
-            printf("prev: %d cur: %d\n", prev, cur);
-            graph->changeFlow(prev, cur, flow);
-            graph->changeFlow(cur, prev, -flow);
-            visitedList[cur] = true;
+            //printf("prev: %d cur: %d\n", prev, cur);
+            graph->sendFlow(prev, cur, flow);
             cur = prev;
         }
     }
@@ -137,7 +147,7 @@ int main() {
 
     for (int i = 0; i < totalNodes; i++) {
         parentsList.push_back(-1);
-        visitedList.push_back(false);
+        //visitedList.push_back(false);
     }
     for (int i = 0; i < markets; i++) {
         int av, st;
