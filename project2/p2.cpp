@@ -11,62 +11,72 @@ int maxFlow = 0;
 
 class Graph {
     int _avenues, _streets, _totalNodes;
-    vector<unordered_map<int, int>> _adjacencies;
+    vector<vector<vector<int>>> _adjacencies;
 
     public:
     Graph(int avenues, int streets) {
         _avenues = avenues;
         _streets = streets;
         _totalNodes = _avenues * _streets * 2 + 2;
-        unordered_map<int, int> aux;
+        vector<vector<int>> aux;
+        //vector<int> maria;
         _adjacencies.push_back(aux);
         for (int i = 1; i < _totalNodes - 1; i++) {
             if (i % 2 == 0) {
-                aux.insert({i - 1, 0});
+                //maria = {i - 1, 0};
+                aux.push_back({i - 1, 0});
                 for (int j = 1; j < _totalNodes - 1; j += 2) {
                     if (j == i - 1 - (2 * _avenues)) { //cima
-                        aux.insert({j, 1});
-                        _adjacencies[j].insert({i, 0});
-                        _adjacencies[i - 1].insert({j + 1, 0});
+                        aux.push_back({j, 1});
+                        _adjacencies[j].push_back({i, 0});
+                        _adjacencies[i - 1].push_back({j + 1, 0});
                     }
                     else if ((i / 2) % _avenues != 1 && j == i - 3) { //esquerda
-                        aux.insert({j, 1}); 
-                        _adjacencies[j].insert({i, 0});
-                        _adjacencies[i - 1].insert({j + 1, 0});
+                        aux.push_back({j, 1}); 
+                        _adjacencies[j].push_back({i, 0});
+                        _adjacencies[i - 1].push_back({j + 1, 0});
                     }
                     else if (j == i - 1 + (2 * _avenues)) //baixo
-                        aux.insert({j, 1});
+                        aux.push_back({j, 1});
                     else if ((i / 2) % _avenues != 0 && j == i + 1) //direita
-                        aux.insert({j, 1});
+                        aux.push_back({j, 1});
                 }
             }
             else
-                aux.insert({i + 1, 1});
+                aux.push_back({i + 1, 1});
             _adjacencies.push_back(aux);
             aux.clear();
         }
         _adjacencies.push_back(aux);
     }
     
-    unordered_map<int, int> getAdjacencies(int i) { return _adjacencies[i]; }
+    vector<vector<int>> getAdjacencies(int i) { return _adjacencies[i]; }
     int getTotalNodes() { return _totalNodes; }
     int getIndexFromCoordinates(int av, int st) { return (st - 1) * _avenues + av; }
     
     void sendFlow(int prev, int cur, int flow) {
-        _adjacencies[prev].find(cur)->second -= flow;
-        _adjacencies[cur].find(prev)->second += flow;
+        for (int i = 0; i < (int) _adjacencies[prev].size(); i++)
+            if (_adjacencies[prev][i][0] == cur) {
+                _adjacencies[prev][i][1] -= flow;
+                break;
+            }
+        for (int i = 0; i < (int) _adjacencies[cur].size(); i++)
+            if (_adjacencies[cur][i][0] == prev) {
+                _adjacencies[cur][i][1] += flow;
+                break;
+            }
     }
 
     void addMarket(int av, int st) { 
         int index = getIndexFromCoordinates(av, st) * 2;
-        _adjacencies[index].insert({_totalNodes - 1, 1}); 
-        _adjacencies[_totalNodes - 1].insert({index, 0}); 
+        _adjacencies[index].push_back({_totalNodes - 1, 1}); 
+        _adjacencies[_totalNodes - 1].push_back({index, 0}); 
     }
     
     void addClient(int av, int st) { 
         int index = getIndexFromCoordinates(av, st) * 2 - 1;
-        _adjacencies[0].insert({index, 1}); 
-        _adjacencies[index].insert({0, 0});
+        _adjacencies[0].push_back({index, 1}); 
+        _adjacencies[index].push_back({0, 0});
     }
 };
 
@@ -78,12 +88,12 @@ int bfs(Graph *graph, int s, int t) {
     while (!q.empty()) {
         int cur = q.front().first;
         q.pop();
-        for (pair<int, int> next : graph->getAdjacencies(cur)) {
-            if (parentsList[next.first] == -1 && next.second > 0) { 
-                parentsList[next.first] = cur;
-                if (next.first == t)
+        for (vector<int> next : graph->getAdjacencies(cur)) {
+            if (parentsList[next[0]] == -1 && next[1] > 0) { 
+                parentsList[next[0]] = cur;
+                if (next[0] == t)
                     return 1;
-                q.push({next.first, 1});
+                q.push({next[0], 1});
             }
         }
     }
@@ -109,9 +119,9 @@ void printGraph(Graph* g) {
     for (int i = 0; i < g->getTotalNodes(); i++) {
         if (i % 2) printf("%de: ", (i + 1)/2);
         else printf("%ds: ", (i + 1)/2);
-        for (pair<int, int> next : g->getAdjacencies(i))
-            if (i % 2) printf("%ds ", (next.first/2) + (next.first%2));
-            else printf("%de ", (next.first/2) + (next.first%2));
+        for (vector<int> next : g->getAdjacencies(i))
+            if (i % 2) printf("%ds ", (next[0] / 2) + (next[0] % 2));
+            else printf("%de ", (next[0] / 2) + (next[0] % 2));
         printf("\n");
     }
 }
