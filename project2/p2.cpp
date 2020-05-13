@@ -20,21 +20,26 @@ class Graph {
         for (int i = 1; i < _totalNodes - 1; i++) {
             if (i % 2 == 0) {
                 aux.insert({i - 1, 0});
-                for (int j = 1; j < _totalNodes - 1; j += 2) {
-                    if (j == i - 1 - (2 * _avenues)) { //cima
-                        aux.insert({j, 1});
-                        _adjacencies[j].insert({i, 0});
-                        _adjacencies[i - 1].insert({j + 1, 0});
-                    }
-                    else if ((i / 2) % _avenues != 1 && j == i - 3) { //esquerda
-                        aux.insert({j, 1}); 
-                        _adjacencies[j].insert({i, 0});
-                        _adjacencies[i - 1].insert({j + 1, 0});
-                    }
-                    else if (j == i - 1 + (2 * _avenues)) //baixo
-                        aux.insert({j, 1});
-                    else if ((i / 2) % _avenues != 0 && j == i + 1) //direita
-                        aux.insert({j, 1});
+                int j;
+                if (i > _avenues * 2) { //cima
+                    j = i - 1 - (2 * _avenues);
+                    aux.insert({j, 1});
+                    _adjacencies[j].insert({i, 0});
+                    _adjacencies[i - 1].insert({j + 1, 0});
+                }
+                if ((i / 2) % _avenues != 1) { //esquerda
+                    j = i - 3;
+                    aux.insert({j, 1}); 
+                    _adjacencies[j].insert({i, 0});
+                    _adjacencies[i - 1].insert({j + 1, 0});
+                }
+                if (i < _totalNodes - _avenues * 2) { //baixo
+                    j = i - 1 + (2 * _avenues);
+                    aux.insert({j, 1});
+                }
+                if ((i / 2) % _avenues != 0) { //direita
+                    j = i + 1;
+                    aux.insert({j, 1});
                 }
             }
             else
@@ -133,7 +138,7 @@ int main() {
             exit(EXIT_FAILURE);
         graph->addClient(av, st);
     }
-
+    
     graph->fordFulkerson(0, graph->getTotalNodes() - 1);
     return 0;
 }
